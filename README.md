@@ -37,3 +37,20 @@ cd backend
 npm install
 npm run dev
 ```
+
+## 📌 Roadmap
+ MVP mod tracker with basic fields
+
+ Sponsor tagging + review URLs
+
+ Public build sheet export
+
+ Authentication
+
+ Review/media embed support
+
+## 🧪 Demo & Screenshots
+(Coming soon…)
+
+## 📄 License
+MIT
