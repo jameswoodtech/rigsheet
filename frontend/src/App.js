@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles/App.css';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+import LoadingScreen from './components/LoadingScreen';
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -12,6 +13,16 @@ import Printable from './pages/Printable';
 
 function App() {
   const userId = 'user1';
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 2000); // 2-second minimum load
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <Router>
@@ -24,7 +35,7 @@ function App() {
               <Route path="/" element={<Build />} />
               <Route path="/sponsors" element={<Sponsors />} />
               <Route path="/trail-logs" element={<TrailLogs />} />
-              <Route path="/printable" element={<Printable userId={userId}/>} />
+              <Route path="/printable" element={<Printable userId={userId} />} />
             </Routes>
           </main>
         </div>

@@ -1,19 +1,15 @@
 .logo-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 0;
+  position: relative;
+  height: 190px; /* Or however tall the logo image is */
+  margin-bottom: 1rem;
 }
 
-.logo-image {
-  width: 64px;
-  height: 64px;
+.sidebar-logo {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  max-height: 100%;
+  max-width: 100%;
   object-fit: contain;
-}
-
-.logo-text {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #f39c12;
-  margin: 0;
 }

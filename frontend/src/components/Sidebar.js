@@ -6,14 +6,9 @@ import { NavLink } from 'react-router-dom';
 function Sidebar() {
   return (
     <aside className="sidebar">
-      <div className="logo-container">
-        <img
-          src="/assets/rigsheet-logo.png"
-          alt="RigSheet Logo"
-          className="logo-image"
-        />
-        <h2 className="logo-text">RigSheet</h2>
-      </div>
+  <div className="logo-container">
+    <img src="/assets/rigsheet-logo-dark.png" alt="RigSheet Logo" className="sidebar-logo" />
+  </div>
 
       <nav>
         <ul>
