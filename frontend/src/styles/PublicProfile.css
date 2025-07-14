@@ -1,0 +1,104 @@
+/* Container */
+.public-profile-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background-color: #f9fafb; /* subtle off-white */
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Header */
+.public-profile-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.public-profile-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c3e50; /* dark slate */
+  margin-bottom: 0.3rem;
+}
+
+.public-profile-header p {
+  font-size: 1.15rem;
+  color: #7f8c8d; /* muted gray */
+  font-style: italic;
+}
+
+/* Owner & Vehicle Info */
+.owner-vehicle-block {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1rem 1.5rem;
+  background: #e8f0fe; /* very light blue */
+  border-radius: 10px;
+}
+
+.owner-vehicle-block img.vehicle-image {
+  width: 160px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  object-fit: cover;
+}
+
+.owner-info {
+  flex: 1;
+}
+
+.owner-info h2 {
+  margin: 0 0 0.3rem 0;
+  color: #34495e;
+  font-weight: 600;
+  font-size: 1.6rem;
+}
+
+.owner-info p {
+  margin: 0;
+  color: #5d6d7e;
+  font-size: 1rem;
+}
+
+/* Mod List Section */
+.mod-list-section {
+  margin-top: 1.5rem;
+}
+
+.mod-list-section h3 {
+  font-weight: 600;
+  font-size: 1.7rem;
+  color: #34495e;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #2980b9; /* brand blue */
+  padding-bottom: 0.5rem;
+}
+
+/* Sponsor Highlight */
+.sponsor-highlight {
+  margin-top: 2rem;
+  padding: 1rem 1.5rem;
+  background-color: #fef3e7; /* soft yellow/orange */
+  border-left: 6px solid #f39c12; /* gold accent */
+  color: #7f6000;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .owner-vehicle-block {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .owner-vehicle-block img.vehicle-image {
+    width: 100%;
+    max-width: 300px;
+  }
+}

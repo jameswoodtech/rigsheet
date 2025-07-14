@@ -10,6 +10,7 @@ import Build from './pages/Build';
 import Sponsors from './pages/Sponsors';
 import TrailLogs from './pages/TrailLogs';
 import Printable from './pages/Printable';
+import PublicProfile from './pages/PublicProfile';
 
 function App() {
   const userId = 'user1';
@@ -36,6 +37,7 @@ function App() {
               <Route path="/sponsors" element={<Sponsors />} />
               <Route path="/trail-logs" element={<TrailLogs />} />
               <Route path="/printable" element={<Printable userId={userId} />} />
+              <Route path="/user/:userId" element={<PublicProfile />} />
             </Routes>
           </main>
         </div>
