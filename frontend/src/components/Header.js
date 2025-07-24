@@ -2,11 +2,15 @@
 import React from 'react';
 //import './Header.css';
 
-function Header() {
+function Header({ userProfile }) {
+  const displayName = userProfile?.displayName || '';
+
   return (
     <header className="header">
       <div className="app-title">RigSheet Dashboard</div>
-      <div className="user-profile">Logged in as: OverlandJoe</div>
+      <div className="user-profile">
+        Logged in as: {displayName}
+      </div>
     </header>
   );
 }

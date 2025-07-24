@@ -1,14 +1,11 @@
-import { fetchMods } from '../data/fetchMods';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import '../styles/ModList.css';
 import ModCard from './ModCard';
 
-function ModList() {
-  const [mods, setMods] = useState([]);
-
-  useEffect(() => {
-    fetchMods('user1').then(setMods);
-  })
+function ModList({ mods }) {
+  if (!mods || mods.length === 0) {
+    return <p>No modifications added yet.</p>;
+  }
 
   return (
     <div className="mod-list-container">

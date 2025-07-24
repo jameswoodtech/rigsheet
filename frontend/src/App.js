@@ -13,12 +13,41 @@ import Printable from './pages/Printable';
 import PublicProfile from './pages/PublicProfile';
 
 function App() {
-  const userId = 'user1';
+  const userId = '1';
+
   const [isLoading, setIsLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(null);
+  const [vehicleInfo, setVehicleInfo] = useState(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 2000); // 2-second minimum load
-    return () => clearTimeout(timer);
+    const MIN_LOADING_TIME = 2000;
+
+    const fetchData = async () => {
+      const startTime = Date.now();
+
+      try {
+        const [userRes, vehicleRes] = await Promise.all([
+          fetch(`http://localhost:8080/api/user-profiles/${userId}`),
+          fetch(`http://localhost:8080/api/vehicles/user/${userId}`)
+        ]);
+
+        const [userData, vehicleData] = await Promise.all([
+          userRes.json(),
+          vehicleRes.json()
+        ]);
+
+        setUserProfile(userData);
+        setVehicleInfo(vehicleData);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        const elapsed = Date.now() - startTime;
+        const delay = Math.max(0, MIN_LOADING_TIME - elapsed);
+        setTimeout(() => setIsLoading(false), delay);
+      }
+    };
+
+    fetchData();
   }, []);
 
   if (isLoading) {
@@ -30,10 +59,10 @@ function App() {
       <div className="app-container">
         <Sidebar />
         <div className="main-content">
-          <Header />
+          <Header userProfile={userProfile} />
           <main className="page-content">
             <Routes>
-              <Route path="/" element={<Build />} />
+              <Route path="/" element={<Build userProfile={userProfile} vehicleInfo={vehicleInfo} />} />
               <Route path="/sponsors" element={<Sponsors />} />
               <Route path="/trail-logs" element={<TrailLogs />} />
               <Route path="/printable" element={<Printable userId={userId} />} />
