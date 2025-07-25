@@ -1,43 +1,47 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchMods } from '../data/fetchMods';
 import '../styles/PublicProfile.css';
+import useAppStore from '../store/useAppStore';
 
 function PublicProfile() {
   const { userId } = useParams();
-  const [mods, setMods] = useState([]);
-  const [vehicleInfo, setVehicleInfo] = useState(null);
+  const {
+    publicVehicleInfo,
+    mods,
+    fetchPublicVehicleInfo,
+    fetchMods,
+  } = useAppStore();
 
   useEffect(() => {
-    // Fetch user vehicle info & mods (update fetchMods and add fetchVehicleInfo accordingly)
-    import(`../data/${userId}/vehicleInfo.js`)
-      .then((module) => setVehicleInfo(module.default))
-      .catch((err) => {
-            console.error('Error loading vehicleInfo:', err);
-            setVehicleInfo(null);
-            });
+    if (userId) {
+      fetchPublicVehicleInfo(userId);
+    }
+  }, [userId, fetchPublicVehicleInfo]);
 
-    fetchMods(userId).then(setMods);
-  }, [userId]);
+  useEffect(() => {
+    if (publicVehicleInfo?.id) {
+      fetchMods(publicVehicleInfo.id);
+    }
+  }, [publicVehicleInfo, fetchMods]);
 
-  if (!vehicleInfo) return <div>Loading profile...</div>;
+  if (!publicVehicleInfo) return <div>Loading profile...</div>;
 
   return (
     <div className="public-profile-container">
       <header className="public-profile-header">
-        <h1>{vehicleInfo.owner}'s RigSheet</h1>
-        <p>{vehicleInfo.tagline || 'Overlanding Enthusiast'}</p>
+        <h1>{publicVehicleInfo.userProfile?.displayName}'s RigSheet</h1>
+        <p>{publicVehicleInfo.nickname || 'Overlanding Enthusiast'}</p>
       </header>
 
       <section className="owner-vehicle-block">
         <img
-          src={vehicleInfo.image}
-          alt={`${vehicleInfo.owner}'s vehicle`}
+          src={publicVehicleInfo.imageUrl}
+          alt={`${publicVehicleInfo.userProfile?.displayName}'s vehicle`}
           className="vehicle-image"
         />
         <div className="owner-info">
-          <h2>{vehicleInfo.year} {vehicleInfo.make} {vehicleInfo.model}</h2>
-          <p>{vehicleInfo.color}</p>
+          <h2>{publicVehicleInfo.vehicleYear} {publicVehicleInfo.make} {publicVehicleInfo.model} {publicVehicleInfo.trim}</h2>
+          <p>{publicVehicleInfo.color}</p>
         </div>
       </section>
 
@@ -57,7 +61,6 @@ function PublicProfile() {
         )}
       </section>
 
-      {/* Optional sponsor highlight */}
       {mods.some((mod) => mod.sponsored) && (
         <section className="sponsor-highlight">
           This Rig includes sponsored gear from awesome partners!

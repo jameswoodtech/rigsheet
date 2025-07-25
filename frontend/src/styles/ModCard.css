@@ -1,31 +1,69 @@
 .mod-card {
-  background-color: #fff; /* or var(--color-white) if you have variables */
-  border: 1px solid #ddd; /* or var(--color-light-gray) */
-  border-radius: 10px;    /* or var(--radius-lg) */
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
   padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* or var(--shadow-soft) */
-  transition: transform 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .mod-card:hover {
   transform: scale(1.02);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .mod-image {
   width: 100%;
   height: 180px;
-  object-fit: contain; /* use contain to fit image without cropping */
+  object-fit: contain;
   border-radius: 8px;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mod-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0.25rem 0;
+}
+
+.mod-details {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  width: 100%;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.mod-details li {
+  margin-bottom: 0.25rem;
 }
 
 .sponsored-badge {
   display: inline-block;
-  margin-top: 0.5rem;
-  background-color: #ffc107; /* or var(--color-warning) */
-  color: #333;               /* or var(--color-warning-text) */
+  background-color: #ffc107;
+  color: #333;
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
   border-radius: 5px;
   font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.review-link {
+  margin-top: auto;
+  font-size: 0.85rem;
+}
+
+.review-link a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.review-link a:hover {
+  text-decoration: underline;
 }

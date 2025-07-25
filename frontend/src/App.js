@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import './styles/App.css';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -12,68 +12,48 @@ import TrailLogs from './pages/TrailLogs';
 import Printable from './pages/Printable';
 import PublicProfile from './pages/PublicProfile';
 
+import useAppStore from './store/useAppStore';
+
 function App() {
-  const userId = '1';
+  const {
+    userId,
+    userProfile,
+    vehicleInfo,
+    isSidebarOpen,
+    toggleSidebar,
+    closeSidebar,
+    fetchUserAndVehicleData
+  } = useAppStore();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState(null);
-  const [vehicleInfo, setVehicleInfo] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Prevent background scroll when sidebar is open
+  // Disable body scroll when sidebar is open
   useEffect(() => {
     document.body.style.overflow = isSidebarOpen ? 'hidden' : 'auto';
   }, [isSidebarOpen]);
 
-  // Handle Esc key to close sidebar
+  // Close sidebar on Esc
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setIsSidebarOpen(false);
-      }
+      if (e.key === 'Escape') closeSidebar();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen((prev) => !prev);
-  }, []);
-
-  const closeSidebar = useCallback(() => {
-    setIsSidebarOpen(false);
-  }, []);
+  }, [closeSidebar]);
 
   useEffect(() => {
     const MIN_LOADING_TIME = 2000;
+    const startTime = Date.now();
 
-    const fetchData = async () => {
-      const startTime = Date.now();
-
-      try {
-        const [userRes, vehicleRes] = await Promise.all([
-          fetch(`http://localhost:8080/api/user-profiles/${userId}`),
-          fetch(`http://localhost:8080/api/vehicles/user/${userId}`)
-        ]);
-
-        const [userData, vehicleData] = await Promise.all([
-          userRes.json(),
-          vehicleRes.json()
-        ]);
-
-        setUserProfile(userData);
-        setVehicleInfo(vehicleData);
-      } catch (error) {
-        console.error('Failed to load data:', error);
-      } finally {
-        const elapsed = Date.now() - startTime;
-        const delay = Math.max(0, MIN_LOADING_TIME - elapsed);
-        setTimeout(() => setIsLoading(false), delay);
-      }
+    const load = async () => {
+      await fetchUserAndVehicleData();
+      const elapsed = Date.now() - startTime;
+      const delay = Math.max(0, MIN_LOADING_TIME - elapsed);
+      setTimeout(() => setIsLoading(false), delay);
     };
 
-    fetchData();
-  }, []);
+    load();
+  }, [fetchUserAndVehicleData]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -85,7 +65,7 @@ function App() {
         <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
         {isSidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
         <div className="main-content">
-          <Header userProfile={userProfile} onToggleSidebar={toggleSidebar} />
+          <Header />
           <main className="page-content">
             <Routes>
               <Route path="/" element={<Build userProfile={userProfile} vehicleInfo={vehicleInfo} />} />

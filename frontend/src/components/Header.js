@@ -1,14 +1,18 @@
 import React from 'react';
 import '../styles/Header.css';
 import { Menu } from 'lucide-react';
+import useAppStore from '../store/useAppStore';
 
 function Header({ userProfile, onToggleSidebar }) {
-  const displayName = userProfile?.displayName || '';
+  const userProf = useAppStore((state) => state.userProfile);
+  const toggleSidebar = useAppStore((state) => state.toggleSidebar);
+
+  const displayName = userProf?.displayName || '';
 
   return (
     <header className="header">
       {/* Mobile menu button */}
-      <button className="menu-toggle" onClick={onToggleSidebar} aria-label="Open Sidebar">
+      <button className="menu-toggle" onClick={toggleSidebar} aria-label="Open Sidebar">
         <Menu size={24} />
       </button>
 
