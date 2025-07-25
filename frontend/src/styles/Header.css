@@ -1,0 +1,61 @@
+.header {
+  background-color: var(--primary-bg);
+  color: var(--text);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-light);
+  font-size: 1.25rem;
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 10;
+}
+
+.app-title {
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+}
+
+.user-profile {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.menu-toggle svg {
+  display: block;
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1rem;
+  }
+
+  .menu-toggle {
+    display: block;
+    margin-right: 1rem;
+  }
+
+  .app-title {
+    font-size: 1.25rem;
+  }
+
+  .user-profile {
+    font-size: 0.85rem;
+  }
+}

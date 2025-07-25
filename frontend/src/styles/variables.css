@@ -1,0 +1,35 @@
+
+:root {
+    --primary-bg: #2c3e50;
+    --accent: #f39c12;
+    --highlight: #e67e22;
+    --hover-bg: #3d566e;
+    --dark: #1c1f26;
+    --light: #f3f4f6;
+    --text: #ffffff;
+    --radius: 8px;
+    --shadow-light: 0 2px 6px rgba(0, 0, 0, 0.1);
+    --shadow-heavy: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --color-white: #fff;
+    --color-light-gray: #ddd;
+    --color-dark-text: #333;
+    --color-badge-yellow: #ffc107;
+
+    --radius-sm: 5px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+
+    --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.05);
+    --transition-fast: 0.2s ease;
+
+    --font-sm: 0.75rem;
+    --font-base: 1rem;
+    --color-white: #fff;
+    --color-light-gray: #ddd;
+    --radius-sm: 5px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+    --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.05);
+    --color-warning: #ffc107;
+    --color-warning-text: #333;
+}

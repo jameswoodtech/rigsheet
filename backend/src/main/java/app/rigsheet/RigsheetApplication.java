@@ -50,6 +50,7 @@ public class RigsheetApplication {
                     .brand("Evo")
                     .category("Suspension")
                     .sponsored(false)
+                    .imageUrl("/assets/evo-plush-ride.jfif")
                     .userProfile(user)
                     .vehicleInfo(vehicle)
                     .build());
@@ -58,6 +59,7 @@ public class RigsheetApplication {
                     .brand("MetalCloak")
                     .category("Suspension")
                     .sponsored(false)
+                    .imageUrl("/assets/metalcloak-ctrl-arm.webp")
                     .userProfile(user)
                     .vehicleInfo(vehicle)
                     .build());

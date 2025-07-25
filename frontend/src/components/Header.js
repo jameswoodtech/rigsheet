@@ -1,12 +1,17 @@
-// src/components/Header.js
 import React from 'react';
-//import './Header.css';
+import '../styles/Header.css';
+import { Menu } from 'lucide-react';
 
-function Header({ userProfile }) {
+function Header({ userProfile, onToggleSidebar }) {
   const displayName = userProfile?.displayName || '';
 
   return (
     <header className="header">
+      {/* Mobile menu button */}
+      <button className="menu-toggle" onClick={onToggleSidebar} aria-label="Open Sidebar">
+        <Menu size={24} />
+      </button>
+
       <div className="app-title">RigSheet Dashboard</div>
       <div className="user-profile">
         Logged in as: {displayName}

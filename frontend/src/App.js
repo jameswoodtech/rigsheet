@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './styles/App.css';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -18,6 +18,31 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
   const [vehicleInfo, setVehicleInfo] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Prevent background scroll when sidebar is open
+  useEffect(() => {
+    document.body.style.overflow = isSidebarOpen ? 'hidden' : 'auto';
+  }, [isSidebarOpen]);
+
+  // Handle Esc key to close sidebar
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => !prev);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+  }, []);
 
   useEffect(() => {
     const MIN_LOADING_TIME = 2000;
@@ -57,9 +82,10 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-        <Sidebar />
+        <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+        {isSidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
         <div className="main-content">
-          <Header userProfile={userProfile} />
+          <Header userProfile={userProfile} onToggleSidebar={toggleSidebar} />
           <main className="page-content">
             <Routes>
               <Route path="/" element={<Build userProfile={userProfile} vehicleInfo={vehicleInfo} />} />
