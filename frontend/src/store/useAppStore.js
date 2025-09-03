@@ -27,8 +27,8 @@ const useAppStore = create((set) => ({
   fetchUserAndVehicleData: async () => {
     try {
       const [userRes, vehicleRes] = await Promise.all([
-        fetch(`http://localhost:8080/api/user-profiles/1`),
-        fetch(`http://localhost:8080/api/vehicles/user/1`)
+        fetch(`/api/user-profiles/1`),
+        fetch(`/api/vehicles/user/1`)
       ]);
 
       const [userData, vehicleData] = await Promise.all([
@@ -47,7 +47,7 @@ const useAppStore = create((set) => ({
 
   fetchPublicVehicleInfo: async (userId) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/vehicles/user/${userId}`);
+      const res = await fetch(`/api/vehicles/user/${userId}`);
       const data = await res.json();
       set({ publicVehicleInfo: data });
     } catch (error) {
@@ -58,7 +58,7 @@ const useAppStore = create((set) => ({
 
   fetchMods: async (vehicleId) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/mods/vehicle/${vehicleId}`);
+      const res = await fetch(`/api/mods/vehicle/${vehicleId}`);
       const data = await res.json();
       set({ mods: data });
     } catch (error) {

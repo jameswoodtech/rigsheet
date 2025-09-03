@@ -1,5 +1,6 @@
 package app.rigsheet;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,45 +25,8 @@ public class RigsheetApplication {
                                           VehicleInfoRepository vehicleRepo,
                                           ModificationRepository modRepo) {
         return args -> {
-            // Create a user
-            UserProfile user = UserProfile.builder()
-                    .username("user1")
-                    .displayName("James Wood")
-                    .location("Northwest Arkansas")
-                    .build();
-            user = userRepo.save(user);
+           
 
-            // Create vehicle info
-            VehicleInfo vehicle = VehicleInfo.builder()
-                    .vehicleYear("2021")
-                    .make("Jeep")
-                    .model("Gladiator")
-                    .trim("Overland")
-                    .color("Sting Gray")
-                    .nickname("Slightly Boujie")
-                    .userProfile(user)
-                    .build();
-            vehicle = vehicleRepo.save(vehicle);
-
-            // Create some mods
-            modRepo.save(Modification.builder()
-                    .name("2.5 Inch Plush Ride Springs")
-                    .brand("Evo")
-                    .category("Suspension")
-                    .sponsored(false)
-                    .imageUrl("/assets/evo-plush-ride.jfif")
-                    .userProfile(user)
-                    .vehicleInfo(vehicle)
-                    .build());
-            modRepo.save(Modification.builder()
-                    .name("Adjustable Lower Front Control Arms")
-                    .brand("MetalCloak")
-                    .category("Suspension")
-                    .sponsored(false)
-                    .imageUrl("/assets/metalcloak-ctrl-arm.webp")
-                    .userProfile(user)
-                    .vehicleInfo(vehicle)
-                    .build());
         };
     }
 }
