@@ -1,6 +1,14 @@
 import React from 'react';
 import '../styles/VehicleInfo.css';
+import vehiclePlaceholder from '../assets/vehicle-placeholder.jpg'; // ✅ import placeholder image
 
+/**
+ * VehicleInfo component
+ *
+ * Displays detailed information about a vehicle, including year, make, model,
+ * nickname, owner, and location. If no vehicle image is provided, a shared
+ * placeholder graphic is displayed for consistency with other views.
+ */
 function VehicleInfo({ info }) {
   if (!info) return <p>Loading vehicle info...</p>;
 
@@ -19,23 +27,23 @@ function VehicleInfo({ info }) {
         </p>
         <p>
           <strong>Owner:</strong>{' '}
-          <span className="vehicle-owner">{info.userProfile?.displayName || 'Unknown'}</span>
+          <span className="vehicle-owner">
+            {info.userProfile?.displayName || 'Unknown'}
+          </span>
         </p>
         <p>
-          <strong>Location:</strong> <span>{info.userProfile?.location || 'Unknown'}</span>
+          <strong>Location:</strong>{' '}
+          <span>{info.userProfile?.location || 'Unknown'}</span>
         </p>
       </div>
-      {info.image ? (
-        <div className="vehicle-image-container">
-          <img
-            src={info.image}
-            alt={`${info.nickname || info.model} vehicle`}
-            className="vehicle-image"
-          />
-        </div>
-      ) : (
-        <div className="vehicle-image-placeholder">No Image Available</div>
-      )}
+
+      <div className="vehicle-image-container">
+        <img
+          src={info.image || vehiclePlaceholder}
+          alt={`${info.nickname || info.model || 'Vehicle'} image`}
+          className="vehicle-image"
+        />
+      </div>
     </section>
   );
 }

@@ -16,7 +16,7 @@ function Header({ userProfile, onToggleSidebar }) {
         <Menu size={24} />
       </button>
 
-      <div className="app-title">RigSheet Dashboard</div>
+      <div className="app-title">Dashboard</div>
       <div className="user-profile">
         Logged in as: {displayName}
       </div>

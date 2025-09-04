@@ -9,6 +9,19 @@ spring:
       idle-timeout: 30000
       connection-timeout: 20000
       max-lifetime: 1800000
+  mvc:
+    cors:
+      mappings:
+        "[/**]":
+          allowed-origins:
+            - "http://localhost:3000"
+            - "http://127.0.0.1:3000"
+            # add your LAN IP if you test from phones/tablets:
+            # - "http://192.168.1.10:3000"
+          allowed-methods: [ GET, POST, PUT, PATCH, DELETE, OPTIONS ]
+          allowed-headers: [ "*" ]
+          exposed-headers: [ "Location" ]
+          allow-credentials: true
 
   jpa:
     open-in-view: false

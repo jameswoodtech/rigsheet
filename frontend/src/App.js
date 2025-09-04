@@ -3,7 +3,6 @@ import './styles/App.css';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import LoadingScreen from './components/LoadingScreen';
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Build from './pages/Build';
@@ -15,47 +14,47 @@ import PublicProfile from './pages/PublicProfile';
 import useAppStore from './store/useAppStore';
 
 function App() {
-  const {
-    userId,
-    userProfile,
-    vehicleInfo,
-    isSidebarOpen,
-    toggleSidebar,
-    closeSidebar,
-    fetchUserAndVehicleData
-  } = useAppStore();
+  // Sidebar state
+  const isSidebarOpen = useAppStore((s) => s.isSidebarOpen);
+  const toggleSidebar = useAppStore((s) => s.toggleSidebar);
+  const closeSidebar  = useAppStore((s) => s.closeSidebar);
 
-  const [isLoading, setIsLoading] = useState(true);
+  // App boot readiness from the store (set true at the end of hydrateAll)
+  const appReady = useAppStore((s) => s.appReady);
 
-  // Disable body scroll when sidebar is open
+  // Cosmetic minimum load time (so the splash doesn’t flash)
+  const [minLoad, setMinLoad] = useState(true);
+
+  // Prevent body scroll when sidebar is open
   useEffect(() => {
     document.body.style.overflow = isSidebarOpen ? 'hidden' : 'auto';
   }, [isSidebarOpen]);
 
   // Close sidebar on Esc
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') closeSidebar();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    const onKey = (e) => { if (e.key === 'Escape') closeSidebar(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [closeSidebar]);
 
+  // App bootstrap: hydrate data once and enforce a minimum splash duration
   useEffect(() => {
     const MIN_LOADING_TIME = 2000;
-    const startTime = Date.now();
+    const start = Date.now();
+    let timer;
 
-    const load = async () => {
-      await fetchUserAndVehicleData();
-      const elapsed = Date.now() - startTime;
-      const delay = Math.max(0, MIN_LOADING_TIME - elapsed);
-      setTimeout(() => setIsLoading(false), delay);
-    };
+    (async () => {
+      await useAppStore.getState().hydrateAll(); // sets appReady=true when done
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
+      timer = setTimeout(() => setMinLoad(false), remaining);
+    })();
 
-    load();
-  }, [fetchUserAndVehicleData]);
+    return () => clearTimeout(timer);
+  }, []);
 
-  if (isLoading) {
+  // Show splash until BOTH: appReady AND minLoad window are satisfied
+  if (!appReady || minLoad) {
     return <LoadingScreen />;
   }
 
@@ -64,14 +63,15 @@ function App() {
       <div className="app-container">
         <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
         {isSidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
+
         <div className="main-content">
-          <Header />
+          <Header onMenuClick={toggleSidebar} />
           <main className="page-content">
             <Routes>
-              <Route path="/" element={<Build userProfile={userProfile} vehicleInfo={vehicleInfo} />} />
+              <Route path="/" element={<Build />} />
               <Route path="/sponsors" element={<Sponsors />} />
               <Route path="/trail-logs" element={<TrailLogs />} />
-              <Route path="/printable" element={<Printable userId={userId} />} />
+              <Route path="/printable" element={<Printable />} />
               <Route path="/user/:userId" element={<PublicProfile />} />
             </Routes>
           </main>

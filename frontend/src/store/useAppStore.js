@@ -1,70 +1,151 @@
 import { create } from 'zustand';
+import { endpoints } from '../config/api';
 
-const useAppStore = create((set) => ({
-  // --- Static or initial values ---
-  userId: '1',
+/**
+ * Global application state with separated loading domains:
+ * - appReady:   only for initial app bootstrap (App.js splash)
+ * - publicLoading/modsLoading: page-level fetch states (no splash flicker)
+ *
+ * Keep API flows predictable:
+ * - hydrateAll(): boot user + vehicle (+mods) once at app start
+ * - fetchPublicVehicleInfo(): public profile vehicle
+ * - fetchModsForVehicle(): mods for a given vehicle id
+ */
+const useAppStore = create((set, get) => ({
+  // ---------------------------------------------------------------------------
+  // Session / static
+  // ---------------------------------------------------------------------------
+  userId: '1', // TODO: replace with real auth
 
-  // --- User & vehicle data ---
+  // ---------------------------------------------------------------------------
+  // Data
+  // ---------------------------------------------------------------------------
   userProfile: null,
   vehicleInfo: null,
   publicVehicleInfo: null,
   mods: [],
 
-  // --- UI State ---
+  // ---------------------------------------------------------------------------
+  // UI state
+  // ---------------------------------------------------------------------------
   isSidebarOpen: false,
 
-  // --- Actions ---
-  setUserProfile: (profile) => set({ userProfile: profile }),
-  setVehicleInfo: (vehicle) => set({ vehicleInfo: vehicle }),
-  setPublicVehicleInfo: (info) => set({ publicVehicleInfo: info }),
-  setMods: (mods) => set({ mods }),
+  // App bootstrap state (used by App.js to show the global LoadingScreen)
+  appReady: false,
+  setAppReady: (v) => set({ appReady: v }),
 
-  toggleSidebar: () =>
-    set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  // Page/slice-level loading + errors (do NOT trigger the global splash)
+  publicLoading: false,
+  publicError: null,
+  modsLoading: false,
+  modsError: null,
+
+  // ---------------------------------------------------------------------------
+  // UI actions
+  // ---------------------------------------------------------------------------
+  toggleSidebar: () => set((s) => ({ isSidebarOpen: !s.isSidebarOpen })),
   closeSidebar: () => set({ isSidebarOpen: false }),
 
-  // --- Async actions ---
-  fetchUserAndVehicleData: async () => {
-    try {
-      const [userRes, vehicleRes] = await Promise.all([
-        fetch(`/api/user-profiles/1`),
-        fetch(`/api/vehicles/user/1`)
-      ]);
+  // ---------------------------------------------------------------------------
+  // Local setters
+  // ---------------------------------------------------------------------------
+  setUserProfile: (userProfile) => set({ userProfile }),
+  setVehicleInfo: (vehicleInfo) => set({ vehicleInfo }),
+  setPublicVehicleInfo: (publicVehicleInfo) => set({ publicVehicleInfo }),
+  setMods: (mods) => set({ mods }),
 
-      const [userData, vehicleData] = await Promise.all([
-        userRes.json(),
-        vehicleRes.json()
-      ]);
-
-      set({
-        userProfile: userData,
-        vehicleInfo: vehicleData,
-      });
-    } catch (error) {
-      console.error('Failed to fetch data:', error);
-    }
+  // ---------------------------------------------------------------------------
+  // Low-level fetchers
+  // ---------------------------------------------------------------------------
+  fetchUserProfile: async (id) => {
+    const res = await fetch(endpoints.userProfileById(id));
+    if (!res.ok) throw new Error(`Failed to load user profile ${id}`);
+    return res.json();
   },
 
-  fetchPublicVehicleInfo: async (userId) => {
-    try {
-      const res = await fetch(`/api/vehicles/user/${userId}`);
-      const data = await res.json();
-      set({ publicVehicleInfo: data });
-    } catch (error) {
-      console.error('Failed to fetch public vehicle info:', error);
-      set({ publicVehicleInfo: null });
-    }
+  fetchVehicleForUser: async (userId) => {
+    const res = await fetch(endpoints.vehicleByUserId(userId));
+    if (!res.ok) throw new Error(`Failed to load vehicle for user ${userId}`);
+    return res.json();
   },
 
-  fetchMods: async (vehicleId) => {
+  fetchModsForVehicle: async (vehicleId) => {
+    set({ modsLoading: true, modsError: null });
     try {
-      const res = await fetch(`/api/mods/vehicle/${vehicleId}`);
+      const res = await fetch(endpoints.modsByVehicleId(vehicleId));
+      if (!res.ok) throw new Error('Failed to load mods');
       const data = await res.json();
       set({ mods: data });
-    } catch (error) {
-      console.error('Failed to fetch mods:', error);
+      return data;
+    } catch (e) {
+      set({ mods: [], modsError: e.message || 'Failed to load mods' });
+      throw e;
+    } finally {
+      set({ modsLoading: false });
     }
-  }
+  },
+
+  // ---------------------------------------------------------------------------
+  // Public profile flow
+  // ---------------------------------------------------------------------------
+  fetchPublicVehicleInfo: async (userIdOrUsername) => {
+    set({ publicLoading: true, publicError: null });
+    try {
+      // If caller passes a numeric ID, endpoints.vehicleByUserId works directly.
+      // If you want username resolution here, do it outside or add a helper.
+      const vehicle = await get().fetchVehicleForUser(userIdOrUsername);
+      set({ publicVehicleInfo: vehicle });
+
+      if (vehicle?.id) {
+        await get().fetchModsForVehicle(vehicle.id);
+      } else {
+        set({ mods: [] });
+      }
+      return vehicle;
+    } catch (e) {
+      set({
+        publicVehicleInfo: null,
+        publicError: e.message || 'Failed to load public profile',
+        mods: [],
+      });
+      throw e;
+    } finally {
+      set({ publicLoading: false });
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // App bootstrap (dashboard)
+  //  - Loads user + vehicle (+mods) and then marks appReady = true
+  //  - Does NOT toggle public/mods slice flags (prevents splash flicker)
+  // ---------------------------------------------------------------------------
+  hydrateAll: async () => {
+    const { userId } = get();
+    try {
+      const [userProfile, vehicleInfo] = await Promise.all([
+        get().fetchUserProfile(userId),
+        get().fetchVehicleForUser(userId),
+      ]);
+
+      set({ userProfile, vehicleInfo });
+
+      if (vehicleInfo?.id) {
+        await get().fetchModsForVehicle(vehicleInfo.id);
+      } else {
+        set({ mods: [] });
+      }
+    } catch (e) {
+      console.error('hydrateAll error:', e);
+      // Let the app render; components can show friendly errors
+      set({
+        userProfile: null,
+        vehicleInfo: null,
+        mods: [],
+      });
+    } finally {
+      set({ appReady: true });
+    }
+  },
 }));
 
 export default useAppStore;

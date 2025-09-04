@@ -4,27 +4,60 @@ import QRCode from 'react-qr-code';
 import '../styles/Printable.css';
 import useAppStore from '../store/useAppStore';
 
+/**
+ * Printable.js
+ *
+ * Print-friendly summary of the current rig:
+ *  - Vehicle header block (owner, make/model, nickname, image)
+ *  - Tabular list of modifications
+ *  - Footer with branding and QR code to public profile
+ *
+ * Data:
+ *  - Pulled from the centralized Zustand store (userId, vehicleInfo, mods)
+ *  - If vehicle changes, re-fetch its mods
+ *
+ * UX:
+ *  - Lightweight loading/error states (kept minimal for printing contexts)
+ */
 function Printable() {
-  const {
-    userId,
-    vehicleInfo,
-    mods,
-    fetchMods
-  } = useAppStore();
+  // Pull state from the store
+  const userId      = useAppStore((s) => s.userId);
+  const vehicleInfo = useAppStore((s) => s.vehicleInfo);
+  const mods        = useAppStore((s) => s.mods) || [];
+  const loading     = useAppStore((s) => s.loading);
+  const error       = useAppStore((s) => s.error);
 
+  // Build public profile URL for QR code
   const userProfileUrl = `https://rigsheet.app/user/${userId}`;
 
-  // Fetch mods when vehicleInfo is available
+  /**
+   * Effect: when vehicle id changes, fetch fresh mods.
+   * We call the store method through getState() to avoid function-identity
+   * changes retriggering the effect (prevents infinite loops).
+   */
   useEffect(() => {
     if (vehicleInfo?.id) {
-      fetchMods(vehicleInfo.id);
+      useAppStore.getState().fetchModsForVehicle(vehicleInfo.id)
+        .catch(() => { /* error is surfaced via store.error */ });
     }
-  }, [vehicleInfo, fetchMods]);
+  }, [vehicleInfo?.id]);
 
+  // --- Render states (kept simple to remain print-friendly) ---
+  if (loading && !vehicleInfo) {
+    return <div className="loading print-loading">Preparing your printable build…</div>;
+  }
+
+  if (error && !vehicleInfo) {
+    return <div className="error print-error">Couldn’t load your build. {error}</div>;
+  }
+
+  // --- Main printable content ---
   return (
     <div className="print-page">
+      {/* Vehicle block */}
       {vehicleInfo && <VehicleInfo info={vehicleInfo} />}
 
+      {/* Header with print action */}
       <header className="print-header">
         <h1>RigSheet: Build Summary</h1>
         <button className="print-button" onClick={() => window.print()}>
@@ -32,6 +65,7 @@ function Printable() {
         </button>
       </header>
 
+      {/* Mods table */}
       <table className="print-table">
         <thead>
           <tr>
@@ -44,19 +78,32 @@ function Printable() {
           </tr>
         </thead>
         <tbody>
-          {mods.map((mod) => (
-            <tr key={mod.id}>
-              <td>{mod.name}</td>
-              <td>{mod.brand}</td>
-              <td>{mod.category}</td>
-              <td>{mod.weight}</td>
-              <td>{typeof mod.price === 'number' ? `$${mod.price.toFixed(2)}` : 'N/A'}</td>
-              <td>{mod.sponsored ? 'Yes' : 'No'}</td>
+          {mods.length === 0 ? (
+            <tr>
+              <td colSpan="6" style={{ textAlign: 'center', padding: '1rem' }}>
+                No modifications found for this vehicle.
+              </td>
             </tr>
-          ))}
+          ) : (
+            mods.map((mod) => (
+              <tr key={mod.id}>
+                <td>{mod.name}</td>
+                <td>{mod.brand}</td>
+                <td>{mod.category}</td>
+                <td>{mod.weight ?? '—'}</td>
+                <td>
+                  {typeof mod.price === 'number'
+                    ? `$${mod.price.toFixed(2)}`
+                    : (mod.price ?? 'N/A')}
+                </td>
+                <td>{mod.sponsored ? 'Yes' : 'No'}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
 
+      {/* Footer branding + QR */}
       <footer className="print-footer">
         <div className="footer-branding">
           <img
@@ -66,6 +113,7 @@ function Printable() {
           />
           <div className="footer-text">Powered by RigSheet</div>
         </div>
+
         <div
           className="qr-code-container"
           aria-label="QR code linking to digital RigSheet profile"
