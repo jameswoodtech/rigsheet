@@ -59,3 +59,62 @@
     font-size: 0.85rem;
   }
 }
+
+/* --- Header auth controls --- */
+.user-profile {
+  display: flex;               /* make it a row */
+  align-items: center;
+  gap: 0.75rem;                /* space between greeting and button */
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.user-display {
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.95;
+}
+
+/* Shared button style for login/logout */
+.logout-btn,
+.login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.8rem;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;       /* so <Link> looks like a button */
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logout-btn:hover,
+.login-btn:hover {
+  background: var(--accent);
+  color: var(--primary-bg);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.35); /* accent glow */
+}
+
+.logout-btn:active,
+.login-btn:active {
+  transform: translateY(0); /* subtle press */
+}
+
+/* Make sure the menu button remains visible on small screens */
+@media (max-width: 768px) {
+  .user-profile {
+    gap: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .logout-btn,
+  .login-btn {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+  }
+}

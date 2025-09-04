@@ -1,21 +1,70 @@
+// src/store/useAppStore.js
 import { create } from 'zustand';
-import { endpoints } from '../config/api';
+import { endpoints, apiFetchJson } from '../config/api';
 
 /**
- * Global application state with separated loading domains:
- * - appReady:   only for initial app bootstrap (App.js splash)
- * - publicLoading/modsLoading: page-level fetch states (no splash flicker)
+ * Global application state with:
+ * - Auth: token/currentUser + initAuth/login/logout (localStorage persistence)
+ * - Data hydration: hydrateAll() -> userProfile, vehicleInfo, mods
+ * - Public profile flow (+ slice-level loading flags)
+ * - Protected writes (create/update/delete Mod) with Authorization
  *
- * Keep API flows predictable:
- * - hydrateAll(): boot user + vehicle (+mods) once at app start
- * - fetchPublicVehicleInfo(): public profile vehicle
- * - fetchModsForVehicle(): mods for a given vehicle id
+ * Notes:
+ * - All network calls go through apiFetchJson for consistent JSON + error handling
+ * - hydrateAll prefers logged-in user id; falls back to legacy userId for dev
  */
 const useAppStore = create((set, get) => ({
   // ---------------------------------------------------------------------------
   // Session / static
   // ---------------------------------------------------------------------------
-  userId: '1', // TODO: replace with real auth
+  /** Legacy default user id for dev; real sessions use currentUser.id */
+  userId: '1',
+
+  // ---------------------------------------------------------------------------
+  // Auth
+  // ---------------------------------------------------------------------------
+  token: null,          // JWT (or other bearer)
+  currentUser: null,    // { id, username, displayName, roles? }
+
+  /** Restore token/user from localStorage on app start */
+  initAuth: () => {
+    try {
+      const raw = localStorage.getItem('rigsheet_auth');
+      if (!raw) return;
+      const { token, user } = JSON.parse(raw);
+      if (token && user) {
+        set({ token, currentUser: user, userId: String(user.id ?? '1') });
+      }
+    } catch {
+      /* ignore parse errors */
+    }
+  },
+
+  /**
+   * POST /api/auth/login → { token, user }
+   * Persists token+user and updates store.
+   */
+  login: async (username, password) => {
+    const { token, user } = await apiFetchJson(endpoints.login(), {
+      method: 'POST',
+      body: { username, password },
+    });
+
+    localStorage.setItem('rigsheet_auth', JSON.stringify({ token, user }));
+    set({ token, currentUser: user, userId: String(user.id ?? '1') });
+
+    return user;
+  },
+
+  /** Clears token/user and local data */
+logout: () => {
+  localStorage.removeItem('rigsheet_auth');
+  // clear store state as you already do:
+  // set({ token: null, currentUser: null, ... });
+  set({ token: null, currentUser: null, userProfile: null, vehicleInfo: null, publicVehicleInfo: null, mods: [] });
+  // hard redirect to login for a clean slate
+  window.location.assign('/login');
+},
 
   // ---------------------------------------------------------------------------
   // Data
@@ -30,11 +79,11 @@ const useAppStore = create((set, get) => ({
   // ---------------------------------------------------------------------------
   isSidebarOpen: false,
 
-  // App bootstrap state (used by App.js to show the global LoadingScreen)
+  /** Global “app is ready” flag (used by App.js splash) */
   appReady: false,
   setAppReady: (v) => set({ appReady: v }),
 
-  // Page/slice-level loading + errors (do NOT trigger the global splash)
+  /** Slice-level loaders/errors (don’t drive the global splash) */
   publicLoading: false,
   publicError: null,
   modsLoading: false,
@@ -47,7 +96,7 @@ const useAppStore = create((set, get) => ({
   closeSidebar: () => set({ isSidebarOpen: false }),
 
   // ---------------------------------------------------------------------------
-  // Local setters
+  // Local setters (rarely used externally)
   // ---------------------------------------------------------------------------
   setUserProfile: (userProfile) => set({ userProfile }),
   setVehicleInfo: (vehicleInfo) => set({ vehicleInfo }),
@@ -55,26 +104,23 @@ const useAppStore = create((set, get) => ({
   setMods: (mods) => set({ mods }),
 
   // ---------------------------------------------------------------------------
-  // Low-level fetchers
+  // Low-level reads (auth-aware)
   // ---------------------------------------------------------------------------
   fetchUserProfile: async (id) => {
-    const res = await fetch(endpoints.userProfileById(id));
-    if (!res.ok) throw new Error(`Failed to load user profile ${id}`);
-    return res.json();
+    const token = get().token;
+    return apiFetchJson(endpoints.userProfileById(id), { token });
   },
 
-  fetchVehicleForUser: async (userId) => {
-    const res = await fetch(endpoints.vehicleByUserId(userId));
-    if (!res.ok) throw new Error(`Failed to load vehicle for user ${userId}`);
-    return res.json();
+  fetchVehicleForUser: async (uid) => {
+    const token = get().token;
+    return apiFetchJson(endpoints.vehicleByUserId(uid), { token });
   },
 
   fetchModsForVehicle: async (vehicleId) => {
+    const token = get().token;
     set({ modsLoading: true, modsError: null });
     try {
-      const res = await fetch(endpoints.modsByVehicleId(vehicleId));
-      if (!res.ok) throw new Error('Failed to load mods');
-      const data = await res.json();
+      const data = await apiFetchJson(endpoints.modsByVehicleId(vehicleId), { token });
       set({ mods: data });
       return data;
     } catch (e) {
@@ -86,13 +132,41 @@ const useAppStore = create((set, get) => ({
   },
 
   // ---------------------------------------------------------------------------
+  // Protected writes (examples)
+  // ---------------------------------------------------------------------------
+  createMod: async (mod) => {
+    const token = get().token;
+    return apiFetchJson(endpoints.mods(), {
+      method: 'POST',
+      token,
+      body: mod, // { vehicleInfo: { id }, name, brand, ... }
+    });
+  },
+
+  updateMod: async (id, mod) => {
+    const token = get().token;
+    return apiFetchJson(endpoints.modById(id), {
+      method: 'PUT',
+      token,
+      body: mod,
+    });
+  },
+
+  deleteMod: async (id) => {
+    const token = get().token;
+    await apiFetchJson(endpoints.modById(id), {
+      method: 'DELETE',
+      token,
+    });
+  },
+
+  // ---------------------------------------------------------------------------
   // Public profile flow
   // ---------------------------------------------------------------------------
   fetchPublicVehicleInfo: async (userIdOrUsername) => {
     set({ publicLoading: true, publicError: null });
     try {
-      // If caller passes a numeric ID, endpoints.vehicleByUserId works directly.
-      // If you want username resolution here, do it outside or add a helper.
+      // If you later support usernames, resolve them before this call.
       const vehicle = await get().fetchVehicleForUser(userIdOrUsername);
       set({ publicVehicleInfo: vehicle });
 
@@ -116,15 +190,15 @@ const useAppStore = create((set, get) => ({
 
   // ---------------------------------------------------------------------------
   // App bootstrap (dashboard)
-  //  - Loads user + vehicle (+mods) and then marks appReady = true
-  //  - Does NOT toggle public/mods slice flags (prevents splash flicker)
   // ---------------------------------------------------------------------------
   hydrateAll: async () => {
-    const { userId } = get();
+    // Prefer authenticated user id if present
+    const activeUserId = get().currentUser?.id ?? get().userId;
+
     try {
       const [userProfile, vehicleInfo] = await Promise.all([
-        get().fetchUserProfile(userId),
-        get().fetchVehicleForUser(userId),
+        get().fetchUserProfile(activeUserId),
+        get().fetchVehicleForUser(activeUserId),
       ]);
 
       set({ userProfile, vehicleInfo });
@@ -136,12 +210,7 @@ const useAppStore = create((set, get) => ({
       }
     } catch (e) {
       console.error('hydrateAll error:', e);
-      // Let the app render; components can show friendly errors
-      set({
-        userProfile: null,
-        vehicleInfo: null,
-        mods: [],
-      });
+      set({ userProfile: null, vehicleInfo: null, mods: [] });
     } finally {
       set({ appReady: true });
     }
