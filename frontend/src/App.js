@@ -29,6 +29,7 @@ function AppInner() {
   // App boot readiness from the store (set true at the end of hydrateAll)
   const appReady = useAppStore((s) => s.appReady);
   const initAuth = useAppStore((s) => s.initAuth);
+  const token = useAppStore((s) => s.token);
 
   // Cosmetic minimum load time (for private shell only)
   const [minLoad, setMinLoad] = useState(true);
@@ -55,7 +56,9 @@ function AppInner() {
       initAuth(); // restore token/user from localStorage
 
       // Hydrate dashboard data in the background. It won’t block public pages.
-      await useAppStore.getState().hydrateAll();
+      if (!isPublicPage && token) {
+        await useAppStore.getState().hydrateAll();
+      }
 
       const elapsed = Date.now() - start;
       const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
@@ -64,10 +67,10 @@ function AppInner() {
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isPublicPage, token]);
 
   // Show splash ONLY on private pages
-  if (!isPublicPage && (!appReady || minLoad)) {
+  if (!isPublicPage && token && (!appReady || minLoad)) {
     return <LoadingScreen />;
   }
 
